@@ -16,6 +16,8 @@ import { SupabaseAuthClient } from '@supabase/supabase-js/dist/module/lib/Supaba
 	    <input type="password" required v-model="passwd" ><br>
       <button v-on:click="register()">Sign Up</button>
       <button v-on:click="login()">Sign In</button>
+      <button v-on:click="logout()">Log Out</button>
+      <button v-on:click="reset()">Reset</button>
       <p>
       <label id="status"> You are not yet connected </label><br>  
       </p>
@@ -29,8 +31,8 @@ import { SupabaseAuthClient } from '@supabase/supabase-js/dist/module/lib/Supaba
 
 <script>
 
-const SUPABASE_URL = 'https://fvagvphjbvhhwtjkwulx.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YWd2cGhqYnZoaHd0amt3dWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjMzMzczNjcsImV4cCI6MTk3ODkxMzM2N30.gZO_ATz6HLpCt8Ek06VkSLEmPmSUCpqHwsPN96PJmH4'
+const SUPABASE_URL = 'https://gdgqtlgscbionfplvzja.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkZ3F0bGdzY2Jpb25mcGx2emphIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjMzNDA4NTMsImV4cCI6MTk3ODkxNjg1M30.yKpFR1rTEsWpJcw2WusieSVNgTrHFBARbHUUvpy6nzE'
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -61,8 +63,30 @@ export default {
         document.getElementById('status').innerHTML='You are now logged !' 
       } catch (error) { 
         alert(error.error_description || error.message); 
-      }  
-    } 
+      } 
+    },
+    async reset() {
+      const { data, error } = await supabase.auth.api.resetPasswordForEmail(
+        this.email
+      )
+    },
+    async logout() {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      document.getElementById('status').innerHTML = 'You are now logged out !'
+    },
+  },
+  mounted() {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event == 'PASSWORD_RECOVERY') {
+        const newPassword = prompt('What would you like your new password to be?')
+        const { data, error } = await supabase.auth.update({
+          password: newPassword,
+        })
+        if (data) alert('Password updated successfully!')
+        if (error) alert('There was an error updating your password.')
+      }
+    })
   }
 }
 </script>
